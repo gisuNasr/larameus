@@ -13,9 +13,9 @@ class SamplePushService
     private PushGateway $pushGateway;
     private \Prometheus\Counter $requestCounter;
 
-    public function __construct()
+    public function __construct(CollectorRegistry $registry)
     {
-        $this->registry = new CollectorRegistry(new InMemory());
+        $this->registry = $registry;
         $this->pushGateway = new PushGateway(env('PUSHGATEWAY_URL'));
 
         $this->requestCounter = $this->registry->getOrRegisterCounter(
@@ -28,7 +28,7 @@ class SamplePushService
 
     public function getPosts()
     {
-        $status = '500';
+        $status = '200';
 
         try {
             $response = Http::get('https://jsonplaceholder.typicode.com/posts');
@@ -37,6 +37,7 @@ class SamplePushService
             return $response->json();
         } finally {
             // Record metric
+            $this->requestCounter->inc(['status' => $status]);
             $this->requestCounter->inc(['status' => $status]);
 
             // Push metrics to Pushgateway
