@@ -3,50 +3,46 @@ version: '3.7'
 services:
   mysql:
     image : mysql:8.0
-    container_name : larameus_mysql
     restart: unless-stopped
-    env_file: ./mysql/.env
+    env_file: ./docker/mysql/.env
     ports:
       - "3310:3306"
     volumes :
-      - "./data/mysql/larameus:/var/lib/mysql"
-      - "./data/mysql/backup:/data/backups"
-      -  "./mysql/my.cnf:/etc/mysql/my.cnf"
+      - "./docker/data/mysql/larameus:/var/lib/mysql"
+      - "./docker/data/mysql/backup:/data/backups"
+      -  "./docker/mysql/my.cnf:/etc/mysql/my.cnf"
     networks:
       - larameus_network
   php :
-    build : ./php
-    container_name : larameus_php
+    build : ./docker/php
     restart: unless-stopped
     ports:
       - "9200:9000"
     volumes :
       - "../src:/var/www/larameus"
-      - "./php/custom.ini:/usr/local/etc/php/conf.d/custom.ini"
+      - "./docker/php/custom.ini:/usr/local/etc/php/conf.d/custom.ini"
     networks:
       - larameus_network
   nginx:
     hostname: larameus_nginx
-    build: ./nginx
-    container_name: larameus_nginx
+    build: ./docker/nginx
     restart: always
     ports:
       - "8040:80"
     volumes:
-      - "./nginx/conf.d:/etc/nginx/conf.d/"
+      - "./docker/nginx/conf.d:/etc/nginx/conf.d/"
       - "../src:/var/www/larameus"
     networks:
       - larameus_network
   redis:
     hostname: larameus_redis
-    build: ./redis
-    container_name: larameus_redis
+    build: ./docker/redis
     ports:
       - "6381:6379"
     expose:
       - '6379'
     volumes:
-      - ./data/redis:/data
+      - ./docker/data/redis:/data
     sysctls:
       - net.core.somaxconn=511
     restart: always
@@ -61,7 +57,7 @@ services:
   prometheus:
     image: prom/prometheus:latest
     volumes:
-      - ./prometheus/:/etc/prometheus/
+      - ./docker/prometheus/:/etc/prometheus/
       - prometheus_data:/prometheus
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
@@ -100,7 +96,7 @@ services:
     ports:
       - 9093:9093
     volumes:
-      - ./alertmanager/:/etc/alertmanager/
+      - ./docker/alertmanager/:/etc/alertmanager/
     networks:
       - larameus_network
     restart: always
@@ -117,9 +113,9 @@ services:
       - 3000:3000
     volumes:
       - grafana_data:/var/lib/grafana
-      - ./grafana/provisioning/:/etc/grafana/provisioning/
+      - ./docker/grafana/provisioning/:/etc/grafana/provisioning/
     env_file:
-      - ./grafana/config.monitoring
+      - ./docker/grafana/config.monitoring
     networks:
       - larameus_network
     restart: always
