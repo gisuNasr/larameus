@@ -19,7 +19,7 @@ services:
     ports:
       - "9200:9000"
     volumes :
-      - "../src:/var/www/larameus"
+      - "./src:/var/www/larameus"
       - "./docker/php/custom.ini:/usr/local/etc/php/conf.d/custom.ini"
     networks:
       - larameus_network
@@ -31,7 +31,7 @@ services:
       - "8040:80"
     volumes:
       - "./docker/nginx/conf.d:/etc/nginx/conf.d/"
-      - "../src:/var/www/larameus"
+      - "./src:/var/www/larameus"
     networks:
       - larameus_network
   redis:
