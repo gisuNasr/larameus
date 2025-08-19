@@ -6,24 +6,18 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Arr;
 use Prometheus\CollectorRegistry;
 use Prometheus\Storage\Redis;
+use Prometheus\Storage\APC;
 
 class PrometheusServiceProvider extends ServiceProvider
 {
     /**
      * Register services.
      */
-public function register (): void
+    public function register()
     {
-
-        $this->app->singleton( CollectorRegistry::class, function () {
-
-            Redis::setDefaultOptions(
-                Arr::only(config('database.redis.default' ), [ 'host', 'password', 'username' ] )
-            );
-
-            return CollectorRegistry::getDefault();
-
-        } );
+        $this->app->singleton(CollectorRegistry::class, function () {
+            return new CollectorRegistry(new APC());
+        });
     }
 
     /**

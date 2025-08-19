@@ -37,7 +37,10 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-xpm \
         pdo \
         pdo_mysql \
         simplexml \
-        gd
+        gd \
+    && pecl install apcu \
+    && docker-php-ext-enable apcu
+
 
 # Copy Supervisor config
 COPY Supervisor/larameus.conf /etc/supervisor/conf.d/
