@@ -23,6 +23,8 @@ services:
       - "./docker/php/custom.ini:/usr/local/etc/php/conf.d/custom.ini"
     networks:
       - larameus_network
+    depends_on:
+        - pushgateway
   nginx:
     hostname: larameus_nginx
     build: ./docker/nginx
@@ -119,7 +121,13 @@ services:
     networks:
       - larameus_network
     restart: always
-
+  pushgateway:
+    image: prom/pushgateway:latest
+    ports:
+      - "9091:9091"
+    networks:
+      - larameus_network
+    restart: always
 ####################### VOLUME AND NETWORKS #######################
 volumes:
   redis:

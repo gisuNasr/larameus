@@ -16,6 +16,9 @@ Route::get('/sample-error', function () {
 Route::get('/posts', function (SampleService $service) {
     return $service->getPosts();
 });
+Route::get('/push', function (\App\Services\SamplePushService $service) {
+    return $service->getPosts();
+});
 Route::get('/metrics', function (CollectorRegistry $registry) {
     $renderer = new RenderTextFormat();
     return response($renderer->render($registry->getMetricFamilySamples()))
