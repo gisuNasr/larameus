@@ -13,9 +13,9 @@ class SamplePushService
     private PushGateway $pushGateway;
     private \Prometheus\Counter $requestCounter;
 
-    public function __construct(CollectorRegistry $registry)
+    public function __construct()
     {
-        $this->registry = $registry;
+        $this->registry = new CollectorRegistry(new InMemory());
         $this->pushGateway = new PushGateway(env('PUSHGATEWAY_URL'));
 
         $this->requestCounter = $this->registry->getOrRegisterCounter(
@@ -36,12 +36,8 @@ class SamplePushService
             $status = (string) $response->status();
             return $response->json();
         } finally {
-            // Record metric
             $this->requestCounter->inc(['status' => $status]);
-            $this->requestCounter->inc(['status' => $status]);
-
-            // Push metrics to Pushgateway
-            $this->pushGateway->pushAdd($this->registry, 'laravel_app_job');
+            $this->pushGateway->pushAdd($this->registry, 'sample_push_job');
         }
     }
 }
