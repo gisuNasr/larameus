@@ -28,5 +28,8 @@ receivers:
 
   - name: "sms-notifications"
     webhook_configs:
-      - url: http://my-api/api/notify/send
+      # Placeholder — this app doesn't expose a notify endpoint. Point this
+      # at a real webhook receiver (Slack incoming webhook, PagerDuty Events
+      # API, Opsgenie, ntfy.sh, etc.) to actually receive critical alerts.
+      - url: http://example.invalid/notify/send
         send_resolved: true

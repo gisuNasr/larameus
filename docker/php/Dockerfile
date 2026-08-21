@@ -38,8 +38,8 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-xpm \
         pdo_mysql \
         simplexml \
         gd \
-    && pecl install apcu \
-    && docker-php-ext-enable apcu
+    && pecl install apcu redis \
+    && docker-php-ext-enable apcu redis
 
 
 # Copy Supervisor config
