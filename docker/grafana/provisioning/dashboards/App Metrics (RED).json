@@ -1,0 +1,118 @@
+{
+  "id": null,
+  "uid": "larameus-app-red",
+  "title": "Larameus App Metrics (RED)",
+  "description": "Rate / Errors / Duration for the Laravel app's own Prometheus instrumentation (app_http_requests_total, app_http_request_duration_seconds, app_http_active_requests, app_memory_usage_bytes). Hit /, /posts, /posts/{id}, /sample-error, /delay and watch these panels move.",
+  "tags": ["laravel", "prometheus", "red-method"],
+  "timezone": "browser",
+  "schemaVersion": 27,
+  "version": 1,
+  "refresh": "5s",
+  "time": {
+    "from": "now-15m",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Request rate by status",
+      "type": "graph",
+      "datasource": "Prometheus",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "sum(rate(app_http_requests_total[1m])) by (status)",
+          "legendFormat": "{{status}}",
+          "refId": "A"
+        }
+      ],
+      "yaxes": [
+        { "format": "reqps", "show": true },
+        { "format": "short", "show": false }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "5xx error rate (%)",
+      "type": "graph",
+      "datasource": "Prometheus",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "expr": "sum(rate(app_http_requests_total{status=~\"5..\"}[5m])) / sum(rate(app_http_requests_total[5m])) * 100",
+          "legendFormat": "5xx %",
+          "refId": "A"
+        }
+      ],
+      "yaxes": [
+        { "format": "percent", "show": true, "max": 100, "min": 0 },
+        { "format": "short", "show": false }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Request duration percentiles (by route)",
+      "type": "graph",
+      "datasource": "Prometheus",
+      "description": "Uses histogram_quantile over app_http_request_duration_seconds_bucket. The `path` label is the route pattern (e.g. posts/{id}), not the resolved URL, so per-id traffic doesn't fragment into separate series.",
+      "gridPos": { "h": 9, "w": 24, "x": 0, "y": 8 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, sum(rate(app_http_request_duration_seconds_bucket[5m])) by (le, path))",
+          "legendFormat": "p50 {{path}}",
+          "refId": "A"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(app_http_request_duration_seconds_bucket[5m])) by (le, path))",
+          "legendFormat": "p95 {{path}}",
+          "refId": "B"
+        },
+        {
+          "expr": "histogram_quantile(0.99, sum(rate(app_http_request_duration_seconds_bucket[5m])) by (le, path))",
+          "legendFormat": "p99 {{path}}",
+          "refId": "C"
+        }
+      ],
+      "yaxes": [
+        { "format": "s", "show": true },
+        { "format": "short", "show": false }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Active in-flight requests",
+      "type": "graph",
+      "datasource": "Prometheus",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 17 },
+      "targets": [
+        {
+          "expr": "app_http_active_requests",
+          "legendFormat": "active requests",
+          "refId": "A"
+        }
+      ],
+      "yaxes": [
+        { "format": "short", "show": true },
+        { "format": "short", "show": false }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "PHP memory usage",
+      "type": "graph",
+      "datasource": "Prometheus",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 17 },
+      "targets": [
+        {
+          "expr": "app_memory_usage_bytes",
+          "legendFormat": "{{type}}",
+          "refId": "A"
+        }
+      ],
+      "yaxes": [
+        { "format": "bytes", "show": true },
+        { "format": "short", "show": false }
+      ]
+    }
+  ]
+}
