@@ -3,10 +3,8 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Support\Arr;
 use Prometheus\CollectorRegistry;
 use Prometheus\Storage\Redis;
-use Prometheus\Storage\APC;
 
 class PrometheusServiceProvider extends ServiceProvider
 {
@@ -16,7 +14,11 @@ class PrometheusServiceProvider extends ServiceProvider
     public function register()
     {
         $this->app->singleton(CollectorRegistry::class, function () {
-            return new CollectorRegistry(new APC());
+            return new CollectorRegistry(new Redis([
+                'host' => env('REDIS_HOST', '127.0.0.1'),
+                'port' => (int) env('REDIS_PORT', 6379),
+                'password' => env('REDIS_PASSWORD') ?: null,
+            ]));
         });
     }
 
@@ -25,6 +27,5 @@ class PrometheusServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
     }
 }

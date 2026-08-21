@@ -49,6 +49,10 @@ class PrometheusMiddleware
 
     public function handle(Request $request, Closure $next): Response
     {
+        if ($request->path() === 'metrics') {
+            return $next($request);
+        }
+
         $this->activeRequestsGauge->inc();
         $start = microtime(true);
         /** @var Response $response */
