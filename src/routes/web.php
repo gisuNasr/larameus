@@ -1,5 +1,6 @@
 <?php
 
+use App\Services\DbSampleService;
 use Illuminate\Support\Facades\Route;
 use Prometheus\CollectorRegistry;
 use Prometheus\RenderTextFormat;
@@ -24,11 +25,15 @@ Route::get('/posts', function (SampleService $service) {
     return $service->getPosts();
 });
 
-Route::get('/posts/{id}', function (SampleService $service, string $id) {
+Route::get('/posts/{id}', function (SampleService $service) {
     return $service->getPosts();
 });
 
 Route::get('/delay',function (){
     sleep(random_int(1,5));
     return 'done';
+});
+
+Route::get('/users', function (DbSampleService $service) {
+    return $service->listUsers();
 });
