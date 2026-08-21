@@ -1,33 +1,43 @@
 groups:
-  - name: duration
+  - name: latency
     rules:
-      - alert: response_time_high
-        expr: sum (rate(application_request_duration[1m])) / sum (rate(application_request_counter[1m])) > 3000
-        for: 30s
+      # p95 request latency, computed from the histogram buckets emitted by
+      # PrometheusMiddleware. This is the actual payoff of using a Histogram:
+      # averaging duration_sum/count (the old version of this rule) hides
+      # tail latency behind fast requests, and worse, that old rule compared
+      # a seconds-based value against 3000 — a threshold that assumed
+      # milliseconds — so it could never fire.
+      - alert: response_time_p95_high
+        expr: histogram_quantile(0.95, sum(rate(app_http_request_duration_seconds_bucket[5m])) by (le)) > 3
+        for: 1m
         labels:
           severity: critical
         annotations:
-          summary: "Instance {{ $labels.instance }} response time very high: {{$value}}"
-          description: ""
+          summary: "p95 request latency is {{ $value }}s (threshold 3s)"
+          description: "95th percentile of app_http_request_duration_seconds over the last 5m exceeded 3 seconds."
 
   - name: error_percent_increased
     rules:
+      # Previously filtered on a `responsecode` label that PrometheusMiddleware
+      # never emits (the actual label is `status`), so this rule silently
+      # matched zero series. Also switched from "not 0" to "5xx", since a 0
+      # status was never a value this app produces either.
       - alert: error_percent_increased
-        expr: sum (rate(application_request_counter{responsecode!="0"}[5m])) / sum (rate(application_request_counter[5m])) * 100 > 10
+        expr: sum(rate(app_http_requests_total{status=~"5.."}[5m])) / sum(rate(app_http_requests_total[5m])) * 100 > 10
         for: 30s
         labels:
           severity: critical
         annotations:
-          summary: "Instance {{ $labels.instance }} error percent is {{$value}}"
-          description: ""
+          summary: "5xx error rate is {{ $value }}%"
+          description: "More than 10% of requests over the last 5m returned a 5xx status."
 
   - name: errors_increased
     rules:
       - alert: errors_increased
-        expr: sum (increase(application_request_counter{responsecode!="0"}[1m])) > 100
+        expr: sum(increase(app_http_requests_total{status=~"5.."}[1m])) > 100
         for: 30s
         labels:
           severity: critical
         annotations:
-          summary: "Instance {{ $labels.instance }} errors count in  minutes is {{$value}}"
-          description: "."
+          summary: "5xx error count in the last minute is {{ $value }}"
+          description: "More than 100 5xx responses were recorded in the last minute."
