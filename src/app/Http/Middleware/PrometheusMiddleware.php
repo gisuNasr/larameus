@@ -4,16 +4,19 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Prometheus\Counter;
+use Prometheus\Gauge;
+use Prometheus\Histogram;
 use Symfony\Component\HttpFoundation\Response;
 use Prometheus\CollectorRegistry;
 
 class PrometheusMiddleware
 {
     private CollectorRegistry $registry;
-    private \Prometheus\Counter $requestCounter;
-    private \Prometheus\Gauge $activeRequestsGauge;
-    private \Prometheus\Gauge $memoryGauge;
-    private \Prometheus\Histogram $requestsDurationHistogram;
+    private Counter $requestCounter;
+    private Gauge $activeRequestsGauge;
+    private Gauge $memoryGauge;
+    private Histogram $requestsDurationHistogram;
 
     public function __construct(CollectorRegistry $registry)
     {
@@ -59,16 +62,18 @@ class PrometheusMiddleware
         $response = $next($request);
         $duration = microtime(true) - $start;
 
+        $path = $this->routePathLabel($request);
+
         $this->requestCounter->inc([
             'status' => (string) $response->getStatusCode(),
-            'path'   => '/' . ltrim($request->path(), '/'),
+            'path'   => $path,
             'method' => $request->getMethod(),
         ]);
         $this->requestsDurationHistogram->observe(
             $duration,
             [
                 'status' => $response->getStatusCode(),
-                'path' => $request->path(),
+                'path' => $path,
                 'method' => $request->method()
             ]
         );
@@ -84,5 +89,12 @@ class PrometheusMiddleware
         );
 
         return $response;
+    }
+
+    private function routePathLabel(Request $request): string
+    {
+        $route = $request->route();
+
+        return $route ? '/' . ltrim($route->uri(), '/') : '/' . ltrim($request->path(), '/');
     }
 }
